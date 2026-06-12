@@ -2,6 +2,7 @@ import type { Engine } from './engine';
 import type { Fighter } from './fighter';
 import type { PoseName } from './types';
 import { POSES, lerpPose, clonePose, type Pose } from './poses';
+import { COMMANDS } from './commands';
 
 export const VIEW_W = 960;
 export const VIEW_H = 540;
@@ -388,6 +389,38 @@ export class Renderer {
     };
     drawSlots(a, 0);
     drawSlots(b, 1);
+
+    // 指令招式提示（技能槽上方一排小槽）
+    const drawCmdSlots = (f: Fighter, idx: 0 | 1) => {
+      const cmds = f.loadout.commandMoves;
+      if (!cmds || cmds.every((m) => !m)) return;
+      const slotW = 80;
+      const gap = 5;
+      const total = slotW * COMMANDS.length + gap * (COMMANDS.length - 1);
+      const startX = idx === 0 ? 40 : VIEW_W - 40 - total;
+      const y = VIEW_H - 64 - 14 - 28;
+      for (let i = 0; i < COMMANDS.length && i < cmds.length; i++) {
+        const m = cmds[i];
+        if (!m) continue;
+        const x = startX + i * (slotW + gap);
+        const usable = f.meter >= m.meterCost;
+        ctx.fillStyle = usable ? 'rgba(20,26,52,0.7)' : 'rgba(20,20,20,0.7)';
+        ctx.fillRect(x, y, slotW, 22);
+        ctx.strokeStyle = usable ? m.color : '#444';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, slotW, 22);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 10px "Microsoft YaHei", sans-serif';
+        ctx.fillStyle = usable ? '#9be8ff' : '#777';
+        ctx.fillText(COMMANDS[i].short, x + 4, y + 11);
+        ctx.fillStyle = usable ? '#dde4ff' : '#666';
+        ctx.font = '10px "Microsoft YaHei", sans-serif';
+        ctx.fillText(m.name, x + 4 + COMMANDS[i].short.length * 10 + 4, y + 11);
+      }
+    };
+    drawCmdSlots(a, 0);
+    drawCmdSlots(b, 1);
   }
 
   private drawBanner(ctx: CanvasRenderingContext2D, engine: Engine): void {
