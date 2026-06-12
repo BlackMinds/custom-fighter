@@ -1,5 +1,6 @@
-import type { InputFrame } from './types';
+import type { InputFrame, MoveDef } from './types';
 import { emptyInput } from './input';
+import { COMMANDS } from './commands';
 import type { Engine } from './engine';
 
 // 简单 AI：按距离与对手状态做周期性决策
@@ -87,11 +88,22 @@ export class AIController {
       if (r < 0.2) { input.punch = true; this.cooldown = 12; }
       else if (r < 0.38) { input.kick = true; this.cooldown = 14; }
       else if (r < 0.75) {
-        // 随机使用一个够能量的技能
+        // 随机使用技能槽或指令招式
+        const usableCmds = (self.loadout.commandMoves ?? [])
+          .map((m, i) => ({ m, i }))
+          .filter((e): e is { m: MoveDef; i: number } => !!e.m && self.meter >= e.m.meterCost);
         const usable = skills
           .map((m, i) => ({ m, i }))
           .filter(({ m }) => self.meter >= m.meterCost && m.id !== 'qi_gather');
-        if (usable.length > 0) {
+        if (usableCmds.length > 0 && Math.random() < 0.45) {
+          // 按方向+按键组合触发指令招式
+          const pick = usableCmds[Math.floor(Math.random() * usableCmds.length)];
+          const c = COMMANDS[pick.i];
+          if (c.down) input.down = true;
+          if (c.forward) { if (toOpp === 1) input.right = true; else input.left = true; }
+          if (c.back) { if (toOpp === 1) input.left = true; else input.right = true; }
+          if (c.button === 'punch') input.punch = true; else input.kick = true;
+        } else if (usable.length > 0) {
           const pick = usable[Math.floor(Math.random() * usable.length)];
           press(pick.i);
         } else {

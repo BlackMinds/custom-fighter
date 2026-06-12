@@ -60,6 +60,7 @@ export interface Loadout {
   name: string;
   color: string;
   moves: MoveDef[]; // 4 个技能槽
+  commandMoves?: (MoveDef | null)[]; // 5 个指令位（与 commands.ts 的 COMMANDS 顺序对应），可空着不装
 }
 
 export type GameMode = 'pvp' | 'pve';

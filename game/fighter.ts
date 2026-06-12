@@ -1,6 +1,7 @@
 import type { InputFrame, FighterStateName, Loadout, MoveDef, RectBox } from './types';
 import { emptyInput } from './input';
 import { BASIC_PUNCH, BASIC_KICK } from './moves';
+import { COMMANDS } from './commands';
 
 export const WALK_SPEED = 3.2;
 export const JUMP_VY = 11.5;
@@ -102,12 +103,38 @@ export class Fighter {
     return true;
   }
 
+  // 指令招式匹配：方向（相对面向）+ 拳/踢；方向要求多的优先（下前+拳 优先于 下+拳 / 前+拳）
+  private matchCommandMove(input: InputFrame): MoveDef | null {
+    const cmds = this.loadout.commandMoves;
+    if (!cmds || cmds.length === 0) return null;
+    const forward = this.facing === 1 ? input.right : input.left;
+    const back = this.facing === 1 ? input.left : input.right;
+    let best: MoveDef | null = null;
+    let bestScore = -1;
+    for (let i = 0; i < COMMANDS.length && i < cmds.length; i++) {
+      const c = COMMANDS[i];
+      const move = cmds[i];
+      if (!move) continue;
+      const pressed = c.button === 'punch' ? input.punch : input.kick;
+      if (!pressed) continue;
+      if (c.down && !input.down) continue;
+      if (c.forward && !forward) continue;
+      if (c.back && !back) continue;
+      if (this.meter < move.meterCost) continue;
+      const score = (c.down ? 1 : 0) + (c.forward ? 1 : 0) + (c.back ? 1 : 0);
+      if (score > bestScore) { bestScore = score; best = move; }
+    }
+    return best;
+  }
+
   private tryStartMove(input: InputFrame): void {
     for (let i = 0; i < 4; i++) {
       if (input.skills[i] && this.loadout.moves[i]) {
         if (this.startMove(this.loadout.moves[i])) return;
       }
     }
+    const cmdMove = this.matchCommandMove(input);
+    if (cmdMove && this.startMove(cmdMove)) return;
     if (input.punch) { this.startMove(BASIC_PUNCH); return; }
     if (input.kick) { this.startMove(BASIC_KICK); return; }
   }

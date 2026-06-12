@@ -20,13 +20,15 @@ function pickMode(m: GameMode) {
   screen.value = 'loadout1';
 }
 
+const P1_CMD_HINTS = ['S+J', 'D+J', 'S+D+J', 'A+J', 'A+K'];
+const P2_CMD_HINTS = ['↓+拳', '→+拳', '↓+→+拳', '←+拳', '←+踢'];
+
 function randomLoadout(name: string, color: string): Loadout {
   const pool = [...MOVE_LIBRARY];
-  const moves: MoveDef[] = [];
-  for (let i = 0; i < 4; i++) {
-    moves.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-  }
-  return { name, color, moves };
+  const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+  const moves: MoveDef[] = [take(), take(), take(), take()];
+  const commandMoves: MoveDef[] = [take(), take(), take(), take(), take()];
+  return { name, color, moves, commandMoves };
 }
 
 function onP1Confirm(loadout: Loadout) {
@@ -64,16 +66,19 @@ function backToMenu() {
           <h3 :style="{ color: P1_COLOR }">玩家 1</h3>
           <p>移动 <b>A / D</b> · 跳 <b>W</b> · 蹲 <b>S</b></p>
           <p>拳 <b>J</b> · 踢 <b>K</b> · 技能 <b>U I O P</b></p>
+          <p>指令招式 <b>方向 + J/K</b>（如 S+J、D+J）</p>
         </div>
         <div class="help-col">
           <h3 :style="{ color: P2_COLOR }">玩家 2</h3>
           <p>移动 <b>← →</b> · 跳 <b>↑</b> · 蹲 <b>↓</b></p>
           <p>拳 <b>, (小键盘1)</b> · 踢 <b>. (小键盘2)</b> · 技能 <b>1 2 3 4</b></p>
+          <p>指令招式 <b>方向 + 拳/踢</b>（如 ↓+拳、←+踢）</p>
         </div>
         <div class="help-col">
           <h3 style="color: #ffd166">规则</h3>
           <p>按住后方向键防御 · 三局两胜</p>
           <p>攻击命中积攒能量，能量解锁必杀技</p>
+          <p>指令招式选招时自由装配，"前/后"随面向镜像</p>
         </div>
       </div>
     </div>
@@ -84,6 +89,7 @@ function backToMenu() {
         player-label="玩家 1"
         :player-color="P1_COLOR"
         :key-labels="['U', 'I', 'O', 'P']"
+        :command-hints="P1_CMD_HINTS"
         @confirm="onP1Confirm"
       />
       <button class="back" @click="backToMenu">← 返回菜单</button>
@@ -95,6 +101,7 @@ function backToMenu() {
         player-label="玩家 2"
         :player-color="P2_COLOR"
         :key-labels="['1', '2', '3', '4']"
+        :command-hints="P2_CMD_HINTS"
         @confirm="onP2Confirm"
       />
       <button class="back" @click="backToMenu">← 返回菜单</button>

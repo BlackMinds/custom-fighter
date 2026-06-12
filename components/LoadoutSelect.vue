@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { MOVE_LIBRARY } from '~/game/moves';
+import { COMMANDS } from '~/game/commands';
 import type { Loadout, MoveDef } from '~/game/types';
 
 const props = defineProps<{
   playerLabel: string;
   playerColor: string;
   keyLabels: string[];
+  commandHints: string[];
 }>();
 
 const emit = defineEmits<{
@@ -14,25 +16,40 @@ const emit = defineEmits<{
 }>();
 
 const selected = ref<MoveDef[]>([]);
+// 指令位：存招式 id，'' 表示不装配
+const commandSel = ref<string[]>(COMMANDS.map(() => ''));
 
 const isSelected = (m: MoveDef) => selected.value.some((s) => s.id === m.id);
+
+// 任意槽位（技能槽+指令位）已占用的招式 id
+const usedIds = computed(() => {
+  const ids = new Set(selected.value.map((s) => s.id));
+  for (const id of commandSel.value) if (id) ids.add(id);
+  return ids;
+});
+
+const isUsedByCommand = (m: MoveDef) => commandSel.value.includes(m.id);
 
 function toggle(m: MoveDef) {
   if (isSelected(m)) {
     selected.value = selected.value.filter((s) => s.id !== m.id);
-  } else if (selected.value.length < 4) {
+  } else if (selected.value.length < 4 && !isUsedByCommand(m)) {
     selected.value = [...selected.value, m];
   }
 }
 
+// 指令位下拉选项：排除其他槽位已用的招式（保留本位当前值）
+function optionsFor(slot: number): MoveDef[] {
+  return MOVE_LIBRARY.filter(
+    (m) => m.id === commandSel.value[slot] || !usedIds.value.has(m.id),
+  );
+}
+
 function randomPick() {
   const pool = [...MOVE_LIBRARY];
-  const picks: MoveDef[] = [];
-  for (let i = 0; i < 4; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    picks.push(pool.splice(idx, 1)[0]);
-  }
-  selected.value = picks;
+  const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+  selected.value = [take(), take(), take(), take()];
+  commandSel.value = COMMANDS.map(() => take().id);
 }
 
 const ready = computed(() => selected.value.length === 4);
@@ -43,6 +60,9 @@ function confirm() {
     name: props.playerLabel,
     color: props.playerColor,
     moves: [...selected.value],
+    commandMoves: commandSel.value.map(
+      (id) => MOVE_LIBRARY.find((m) => m.id === id) ?? null,
+    ),
   });
 }
 </script>
@@ -66,17 +86,38 @@ function confirm() {
       </div>
     </div>
 
+    <div class="cmd-title">
+      指令招式（可选）—— 方向+拳/踢 触发，"前/后"相对面向，换边自动镜像
+    </div>
+    <div class="slots cmd-slots">
+      <div
+        v-for="(c, i) in COMMANDS"
+        :key="c.id"
+        class="slot cmd-slot"
+        :class="{ filled: !!commandSel[i] }"
+      >
+        <div class="key">{{ c.label }} <span class="hint">{{ commandHints[i] }}</span></div>
+        <select v-model="commandSel[i]">
+          <option value="">— 不装 —</option>
+          <option v-for="m in optionsFor(i)" :key="m.id" :value="m.id">
+            {{ m.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
     <div class="move-grid">
       <div
         v-for="m in MOVE_LIBRARY"
         :key="m.id"
         class="move-card"
-        :class="{ selected: isSelected(m) }"
+        :class="{ selected: isSelected(m), incmd: isUsedByCommand(m) }"
         @click="toggle(m)"
       >
         <div>
           <span class="mname" :style="{ color: m.color }">{{ m.name }}</span>
           <span class="mtag">{{ m.category }}</span>
+          <span v-if="isUsedByCommand(m)" class="mtag cmd-used">指令位</span>
         </div>
         <div class="mdesc">{{ m.desc }}</div>
         <div class="mstats">
@@ -113,6 +154,22 @@ h2 { font-size: 20px; margin: 4px 0 12px; }
 }
 .slot.filled { border-style: solid; border-color: #ffd166; }
 .slot .key { color: #ffd166; font-weight: bold; }
+.cmd-title { font-size: 13px; color: #9aa0c0; margin: 14px 0 6px; }
+.cmd-slots { margin-top: 0; }
+.cmd-slot .hint { color: #6fc3df; font-weight: normal; font-size: 11px; }
+.cmd-slot select {
+  width: 100%;
+  margin-top: 5px;
+  background: #1c1f33;
+  color: #dde4ff;
+  border: 1px solid #3a3f66;
+  border-radius: 4px;
+  padding: 4px;
+  font-size: 12px;
+}
+.cmd-slot select:focus { outline: none; border-color: #6f7dff; }
+.move-card.incmd { border-color: #48bfe3; cursor: default; }
+.mtag.cmd-used { color: #48bfe3; }
 .move-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
 .move-card {
   background: #1c1f33;
