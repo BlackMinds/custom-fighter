@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { GameMode, Loadout, MoveDef } from '~/game/types';
-import { MOVE_LIBRARY } from '~/game/moves';
+import { MOVE_LIBRARY, COMMAND_MOVE_POOLS } from '~/game/moves';
+import { COMMANDS } from '~/game/commands';
 
 type Screen = 'menu' | 'loadout1' | 'loadout2' | 'battle';
 
@@ -27,7 +28,11 @@ function randomLoadout(name: string, color: string): Loadout {
   const pool = [...MOVE_LIBRARY];
   const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
   const moves: MoveDef[] = [take(), take(), take(), take()];
-  const commandMoves: MoveDef[] = [take(), take(), take(), take(), take()];
+  // 每个指令位从自己的专属招式池随机挑一个
+  const commandMoves: (MoveDef | null)[] = COMMANDS.map((c) => {
+    const opts = COMMAND_MOVE_POOLS[c.id] ?? [];
+    return opts.length ? opts[Math.floor(Math.random() * opts.length)] : null;
+  });
   return { name, color, moves, commandMoves };
 }
 

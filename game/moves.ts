@@ -5,7 +5,7 @@ import type { MoveDef } from './types';
 export const BASIC_PUNCH: MoveDef = {
   id: 'basic_punch', name: '直拳', desc: '快速的基础拳击', category: '普通',
   damage: 5, startup: 4, active: 3, recovery: 9,
-  hitbox: { x: 16, y: -82, w: 30, h: 22 },
+  hitbox: { x: 16, y: -83, w: 40, h: 26 },
   knockback: { x: 3, y: 0 }, hitstun: 14,
   meterCost: 0, meterGain: 5,
   poses: { startup: 'punchWind', active: 'punch', recovery: 'punchWind' },
@@ -15,7 +15,7 @@ export const BASIC_PUNCH: MoveDef = {
 export const BASIC_KICK: MoveDef = {
   id: 'basic_kick', name: '前踢', desc: '范围稍远的基础踢击', category: '普通',
   damage: 7, startup: 7, active: 4, recovery: 13,
-  hitbox: { x: 18, y: -56, w: 36, h: 26 },
+  hitbox: { x: 18, y: -57, w: 46, h: 30 },
   knockback: { x: 4, y: 0 }, hitstun: 16,
   meterCost: 0, meterGain: 6,
   poses: { startup: 'kickWind', active: 'kick', recovery: 'kickWind' },
@@ -142,24 +142,6 @@ export const MOVE_LIBRARY: MoveDef[] = [
     color: '#80ffdb',
   },
   {
-    id: 'burst_palm', name: '寸劲崩拳', desc: '贴身爆发的崩拳，出手极快伤害足，但距离很短', category: '打击',
-    damage: 11, startup: 5, active: 4, recovery: 14,
-    hitbox: { x: 14, y: -80, w: 26, h: 24 },
-    knockback: { x: 6, y: 0 }, hitstun: 20,
-    meterCost: 0, meterGain: 8,
-    poses: { startup: 'punchWind', active: 'punch', recovery: 'punchWind' },
-    color: '#ffadad',
-  },
-  {
-    id: 'swallow_cut', name: '燕返斩', desc: '斜上方的对空斩击，判定位置高，专打跳入', category: '打击',
-    damage: 12, startup: 7, active: 6, recovery: 18,
-    hitbox: { x: 6, y: -112, w: 30, h: 52 },
-    knockback: { x: 3, y: 7 }, hitstun: 22, knockdown: true,
-    meterCost: 0, meterGain: 9,
-    poses: { startup: 'crouch', active: 'uppercut', recovery: 'uppercut' },
-    color: '#bdb2ff',
-  },
-  {
     id: 'slide_kick', name: '滑铲', desc: '低姿态滑铲突进，下段判定并击倒', category: '突进',
     damage: 9, startup: 9, active: 10, recovery: 18,
     hitbox: { x: 12, y: -20, w: 36, h: 20 },
@@ -168,28 +150,122 @@ export const MOVE_LIBRARY: MoveDef[] = [
     poses: { startup: 'crouch', active: 'sweep', recovery: 'crouch' },
     color: '#caffbf',
   },
-  {
-    id: 'vacuum_blade', name: '真空刃', desc: '消耗10能量射出高速气刃，出手快弹速极快', category: '飞行道具',
-    damage: 8, startup: 9, active: 2, recovery: 14,
-    knockback: { x: 3, y: 0 }, hitstun: 14,
-    meterCost: 10, meterGain: 6,
-    projectile: { speed: 10, w: 24, h: 14, lifetime: 90 },
-    poses: { startup: 'smashWind', active: 'throwPose', recovery: 'throwPose' },
-    color: '#90e0ef',
-  },
-  {
-    id: 'rock_elbow', name: '碎岩肘', desc: '沉重肘击，命中硬直长，适合衔接攻势', category: '打击',
-    damage: 13, startup: 12, active: 4, recovery: 18,
-    hitbox: { x: 12, y: -78, w: 30, h: 30 },
-    knockback: { x: 5, y: 0 }, hitstun: 24,
-    meterCost: 0, meterGain: 10,
-    poses: { startup: 'walk', active: 'dashStrike', recovery: 'dashStrike' },
-    color: '#fdffb6',
-  },
 ];
+
+// ===== 指令位专属招式池（每个指令位独立候选，互不重复，不与技能槽共用） =====
+// key 与 commands.ts 中 COMMANDS 的 id 对应
+
+export const COMMAND_MOVE_POOLS: Record<string, MoveDef[]> = {
+  d_punch: [
+    {
+      id: 'ground_jab', name: '地裂拳', desc: '蹲身下段快拳，牵制脚边', category: '打击',
+      damage: 7, startup: 4, active: 3, recovery: 10,
+      hitbox: { x: 16, y: -24, w: 30, h: 18 },
+      knockback: { x: 3, y: 0 }, hitstun: 14,
+      meterCost: 0, meterGain: 5,
+      poses: { startup: 'crouch', active: 'sweep', recovery: 'crouch' },
+      color: '#d4a373',
+    },
+    {
+      id: 'burst_palm', name: '寸劲崩拳', desc: '贴身爆发的崩拳，出手极快伤害足，但距离很短', category: '打击',
+      damage: 11, startup: 5, active: 4, recovery: 14,
+      hitbox: { x: 14, y: -80, w: 26, h: 24 },
+      knockback: { x: 6, y: 0 }, hitstun: 20,
+      meterCost: 0, meterGain: 8,
+      poses: { startup: 'punchWind', active: 'punch', recovery: 'punchWind' },
+      color: '#ffadad',
+    },
+  ],
+  f_punch: [
+    {
+      id: 'rock_elbow', name: '碎岩肘', desc: '沉重肘击，命中硬直长，适合衔接攻势', category: '打击',
+      damage: 13, startup: 12, active: 4, recovery: 18,
+      hitbox: { x: 12, y: -78, w: 30, h: 30 },
+      knockback: { x: 5, y: 0 }, hitstun: 24,
+      meterCost: 0, meterGain: 10,
+      poses: { startup: 'walk', active: 'dashStrike', recovery: 'dashStrike' },
+      color: '#fdffb6',
+    },
+    {
+      id: 'vacuum_blade', name: '真空刃', desc: '消耗10能量射出高速气刃，出手快弹速极快', category: '飞行道具',
+      damage: 8, startup: 9, active: 2, recovery: 14,
+      knockback: { x: 3, y: 0 }, hitstun: 14,
+      meterCost: 10, meterGain: 6,
+      projectile: { speed: 10, w: 24, h: 14, lifetime: 90 },
+      poses: { startup: 'smashWind', active: 'throwPose', recovery: 'throwPose' },
+      color: '#90e0ef',
+    },
+  ],
+  df_punch: [
+    {
+      id: 'swallow_cut', name: '燕返斩', desc: '斜上方的对空斩击，判定位置高，专打跳入', category: '打击',
+      damage: 12, startup: 7, active: 6, recovery: 18,
+      hitbox: { x: 6, y: -112, w: 30, h: 52 },
+      knockback: { x: 3, y: 7 }, hitstun: 22, knockdown: true,
+      meterCost: 0, meterGain: 9,
+      poses: { startup: 'crouch', active: 'uppercut', recovery: 'uppercut' },
+      color: '#bdb2ff',
+    },
+    {
+      id: 'spiral_rise', name: '螺旋升拳', desc: '极快的升拳对空，无无敌但出手仅5帧，挥空后摇大', category: '打击',
+      damage: 10, startup: 5, active: 6, recovery: 26,
+      hitbox: { x: 8, y: -100, w: 26, h: 50 },
+      knockback: { x: 2, y: 8 }, hitstun: 24, knockdown: true,
+      meterCost: 0, meterGain: 8,
+      poses: { startup: 'crouch', active: 'uppercut', recovery: 'uppercut' },
+      color: '#ffc6ff',
+    },
+  ],
+  b_punch: [
+    {
+      id: 'iron_shoulder', name: '铁山靠', desc: '贴身肩撞，命中后把对手大幅撞开，重整距离', category: '打击',
+      damage: 12, startup: 10, active: 5, recovery: 18,
+      hitbox: { x: 10, y: -84, w: 30, h: 44 },
+      knockback: { x: 11, y: 1 }, hitstun: 20,
+      meterCost: 0, meterGain: 9, moveForward: 3,
+      poses: { startup: 'walk', active: 'dashStrike', recovery: 'dashStrike' },
+      color: '#e9c46a',
+    },
+    {
+      id: 'cloud_palm', name: '拨云掌', desc: '出掌同时向后滑步，打了就跑的安全牵制', category: '打击',
+      damage: 8, startup: 6, active: 4, recovery: 12,
+      hitbox: { x: 14, y: -80, w: 30, h: 26 },
+      knockback: { x: 5, y: 0 }, hitstun: 16,
+      meterCost: 0, meterGain: 6, moveForward: -4,
+      poses: { startup: 'punchWind', active: 'punch', recovery: 'punchWind' },
+      color: '#a8dadc',
+    },
+  ],
+  b_kick: [
+    {
+      id: 'moon_kick', name: '旋月踢', desc: '旋身回旋踢，中段击倒，节奏型主力', category: '打击',
+      damage: 11, startup: 9, active: 6, recovery: 17,
+      hitbox: { x: 14, y: -76, w: 36, h: 32 },
+      knockback: { x: 6, y: 3 }, hitstun: 20, knockdown: true,
+      meterCost: 0, meterGain: 8,
+      poses: { startup: 'kickWind', active: 'spinKick', recovery: 'kickWind' },
+      color: '#cdb4db',
+    },
+    {
+      id: 'trip_kick', name: '千鸟绊', desc: '快速下段绊踢，伤害低但出手快并击倒', category: '打击',
+      damage: 6, startup: 6, active: 4, recovery: 12,
+      hitbox: { x: 16, y: -20, w: 32, h: 16 },
+      knockback: { x: 3, y: 2 }, hitstun: 14, knockdown: true,
+      meterCost: 0, meterGain: 5,
+      poses: { startup: 'crouch', active: 'sweep', recovery: 'crouch' },
+      color: '#b5e48c',
+    },
+  ],
+};
 
 export function getMoveById(id: string): MoveDef | undefined {
   if (id === BASIC_PUNCH.id) return BASIC_PUNCH;
   if (id === BASIC_KICK.id) return BASIC_KICK;
-  return MOVE_LIBRARY.find((m) => m.id === id);
+  const inLibrary = MOVE_LIBRARY.find((m) => m.id === id);
+  if (inLibrary) return inLibrary;
+  for (const pool of Object.values(COMMAND_MOVE_POOLS)) {
+    const found = pool.find((m) => m.id === id);
+    if (found) return found;
+  }
+  return undefined;
 }
